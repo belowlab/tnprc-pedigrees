@@ -1,5 +1,12 @@
-#filtering:
+#variant filtering for full coverage data:
 input_vcf=starting_vcf_file.vcf
+gatk VariantFiltration \
+   --variant ${input_vcf} \
+   --output tulane_allchr_filtered.vcf \
+   --filter-name "hard_filter" \
+   --filter-expression "AC == 0 || QD < 10.0 || FS > 2.0 || ( MQ < 59.0 && MQ > 61.00 ) || SOR > 1.5"
+
+#variant filtering for downsampled data
 bcftools filter -i 'FORMAT/DP>5 && GQ>12' -S . -o downsampled.5.0.extfilt.vcf starting_vcf_file.vcf
 
 #running PRIMUS:
