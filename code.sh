@@ -9,8 +9,19 @@ gatk VariantFiltration \
 #variant filtering for downsampled data
 bcftools filter -i 'FORMAT/DP>5 && GQ>12' -S . -o downsampled.5.0.extfilt.vcf starting_vcf_file.vcf
 
+#converting vcf to PLINK format files for PRIMUS:
+plink --vcf tulane_allchr_filtered.vcf --make-bed --out tulane_allchr_filtered_plink
+
 #running PRIMUS:
-run_PRIMUS.pl --file downsampled.5.0.extfilt --genome --keep_inter_files --internal_ref --output_dir filt0217_PRIMUS
+run_PRIMUS.pl --file tulane_allchr_filtered_plink --genome --keep_inter_files --internal_ref --degree_rel_cutoff 1 --output_dir PRIMUS_results
+
+#combining networks in PRIMUS:
+for i in {0..29}
+	do
+	grep -P "^${i}\t" > group${i}_keep
+	plink --bfile tulane_allchr_filtered_plink --keep group${i}_keep --make-bed --out tulane_allchr_filtered_plink_group${i}
+	run_PRIMUS.pl --file tulane_allchr_filtered_plink_group${i} --genome --keep_inter_files --degree_rel_cutoff 2 --internal_ref --output_dir group${i}_PRIMUS
+done
 
 #splitting by chromosome:
 for c in {1..20}; do plink --bfile downsampled.5.0.qualfilt.lowmiss --chr ${c} --recode vcf --out downsampled.5.0.filtered.chr${c}; done
